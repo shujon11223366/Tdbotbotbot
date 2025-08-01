@@ -12,3 +12,5 @@ def echo_all(message):
     bot.reply_to(message, f"Received: {message.text}")
 
 bot.polling()
+if __name__ == "__main__":
+    bot.polling()

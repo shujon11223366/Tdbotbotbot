@@ -1,16 +1,38 @@
-import telebot
-import os
+from flask import Flask, request, jsonify
+from datetime import datetime
+import random
 
-bot = telebot.TeleBot(os.getenv("TELEGRAM_BOT_TOKEN"))
+app = Flask(__name__)
 
-@bot.message_handler(commands=['start'])
-def send_welcome(message):
-    bot.reply_to(message, "Welcome to Viral Signals!")
+def get_signal(pair, timeframe):
+    actions = ["BUY", "SELL"]
+    entry_price = round(random.uniform(0.8, 1.2), 5)
+    confidence = random.randint(60, 95)
+    risk = "LOW" if confidence >= 80 else "MEDIUM" if confidence >= 65 else "HIGH"
 
-@bot.message_handler(func=lambda m: True)
-def echo_all(message):
-    bot.reply_to(message, f"Received: {message.text}")
+    analysis = f"Short-term {timeframe} scalping opportunity. Momentum indicators suggest {actions[1] if actions[0] == 'BUY' else 'bearish'} trend continuation."
 
-bot.polling()
-if __name__ == "__main__":
-    bot.polling()
+    return {
+        "pair": pair.replace("_", "/"),
+        "action": random.choice(actions),
+        "entry_price": f"${entry_price}",
+        "expiration": f"{timeframe} minutes",
+        "confidence": f"{confidence}%",
+        "risk_level": risk,
+        "analysis": analysis,
+        "timestamp": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")
+    }
+
+@app.route('/get-signal')
+def signal():
+    pair = request.args.get('pair', 'EURUSD')
+    timeframe = request.args.get('timeframe', '1m')
+    result = get_signal(pair, timeframe)
+    return jsonify(result)
+
+@app.route('/')
+def home():
+    return "Binary Signal API is running."
+
+if __name__ == '__main__':
+    app.run()
